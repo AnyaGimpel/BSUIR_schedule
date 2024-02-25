@@ -57,6 +57,8 @@ fun getAuditories(context: Context) {
         override fun onResponse(call: Call<Array<Auditories>>, response: Response<Array<Auditories>>) {
             if (response.isSuccessful) {
                 val auditories = response.body()
+                // id кафедры ИПиЭ == 20022
+                // получаем только аудитории кафедры
                 val filteredAuditories = auditories?.filter { it.department?.idDepartment == 20022 }
 
                 // Преобразование в JSON

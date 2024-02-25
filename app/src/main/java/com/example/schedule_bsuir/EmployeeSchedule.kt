@@ -26,11 +26,11 @@ data class EmployeeDto(
     val degree: String,
     val degreeAbbrev: String,
     val rank: String,
-    val photoLink: String,
-    val calendarId: String,
+    //val photoLink: String,
+    //val calendarId: String,
     val id: Int,
     val urlId: String,
-    val jobPositions: List<String>
+    //val jobPositions: List<String>
 )
 
 data class Schedule(
@@ -65,14 +65,22 @@ data class EmployeeSchedule(
 
 data class StudentGroupDto(
     val specialityName: String,
-    val specialityCode: String,
-    val numberOfStudents: Int,
+    //val specialityCode: String,
+    //val numberOfStudents: Int,
     val name: String,
-    val educationDegree: Int
+    //val educationDegree: Int
 )
 
 
 fun getEmployeeSchedules(context: Context) {
+
+    val employees_urlId = getEmployeesUrlId(context)
+    Log.d("MainActivity", employees_urlId.toString())
+
+    val auditories_full_name = getFulAudName(context)
+    Log.d("MainActivity", auditories_full_name.toString())
+
+    val gson = Gson()
     val retrofit = Retrofit.Builder()
         .baseUrl("https://iis.bsuir.by/api/v1/")
         .addConverterFactory(GsonConverterFactory.create())
@@ -80,28 +88,56 @@ fun getEmployeeSchedules(context: Context) {
 
     val api = retrofit.create(EmployeeScheduleAPI::class.java)
 
-    api.getEmployeeSchedule("s-nesterenkov").enqueue(object : Callback<EmployeeSchedule> {
-        override fun onResponse(call: Call<EmployeeSchedule>, response: Response<EmployeeSchedule>) {
-            if (response.isSuccessful) {
-                val employeeSchedule = response.body()
+    val allEmployeeSchedules = mutableListOf<EmployeeSchedule>()
 
-                val gson = Gson()
-                val json = gson.toJson(employeeSchedule)
+    // Итерируемся по каждому urlId и отправляем запросы
+    for (urlId in employees_urlId) {
+        api.getEmployeeSchedule(urlId).enqueue(object : Callback<EmployeeSchedule> {
+            override fun onResponse(call: Call<EmployeeSchedule>, response: Response<EmployeeSchedule>) {
+                if (response.isSuccessful) {
+                    val employeeSchedule = response.body()
+                    if (employeeSchedule != null) {
+                        allEmployeeSchedules.add(employeeSchedule)
+                    }
 
-                val file = File(context.getExternalFilesDir(null), "employeeSchedule_s-nesterenkov.json")
-                try {
-                    file.writeText(json)
-                    Log.d("MainActivity", "Данные успешно записаны в файл employeeSchedule_s-nesterenkov.json")
-                } catch (e: Exception) {
-                    Log.e("MainActivity", "Ошибка при записи данных в файл: $e")
+                    if (employees_urlId.last() == urlId) { // Если это последний запрос
+                       // val json = gson.toJson(allEmployeeSchedules)
+                        val json = allEmployeeSchedules.joinToString(separator = "\n") { gson.toJson(it) }
+                        val file = File(context.getExternalFilesDir(null), "employeeSchedule.json")
+                        try {
+                            file.writeText(json)
+                            Log.d("MainActivity", "Данные успешно записаны в файл employeeSchedule.json")
+                        } catch (e: Exception) {
+                            Log.e("MainActivity", "Ошибка при записи данных в файл: $e")
+                        }
+                    }
+                } else {
+                    // Обработка ошибки
                 }
-            } else {
+            }
+
+            override fun onFailure(call: Call<EmployeeSchedule>, t: Throwable) {
                 // Обработка ошибки
             }
-        }
+        })
+    }
+}
 
-        override fun onFailure(call: Call<EmployeeSchedule>, t: Throwable) {
-            // Обработка ошибки
-        }
-    })
+fun getEmployeesUrlId(context: Context): List<String>  {
+    val gson = Gson()
+    val file = File(context.getExternalFilesDir(null), "employees.json")
+    val jsonString = file.readText()
+    val employees: List<Employee> = gson.fromJson(jsonString, Array<Employee>::class.java).toList()
+
+    val employees_urlId = employees.map { it.urlId }
+    return employees_urlId
+}
+fun getFulAudName(context: Context): List<String> {
+    val gson = Gson()
+    val file = File(context.getExternalFilesDir(null), "auditories.json")
+    val jsonString = file.readText()
+    val auditories: List<Auditories> = gson.fromJson(jsonString, Array<Auditories>::class.java).toList()
+
+    val auditories_full_name = auditories.map { it.name + "-" + it.buildingNumber.name }
+    return auditories_full_name
 }
