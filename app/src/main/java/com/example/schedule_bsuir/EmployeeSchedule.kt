@@ -12,6 +12,7 @@ import retrofit2.http.GET
 import java.io.File
 import com.google.gson.reflect.TypeToken
 import retrofit2.http.Path
+import kotlin.collections.any
 
 
 interface EmployeeScheduleAPI {
@@ -97,11 +98,15 @@ fun getEmployeeSchedules(context: Context) {
                 if (response.isSuccessful) {
                     val employeeSchedule = response.body()
                     if (employeeSchedule != null) {
-                        allEmployeeSchedules.add(employeeSchedule)
+                        // Получаем список Schedule для каждого ключа из schedules и проверяем auditories
+                        val schedulesWithAuditories = employeeSchedule.schedules.values.flatten().filter { it.auditories.any { it in auditories_full_name } }
+                        if (schedulesWithAuditories.isNotEmpty()) {
+                            allEmployeeSchedules.add(employeeSchedule)
+                        }
                     }
 
                     if (employees_urlId.last() == urlId) { // Если это последний запрос
-                       // val json = gson.toJson(allEmployeeSchedules)
+
                         val json = allEmployeeSchedules.joinToString(separator = "\n") { gson.toJson(it) }
                         val file = File(context.getExternalFilesDir(null), "employeeSchedule.json")
                         try {
