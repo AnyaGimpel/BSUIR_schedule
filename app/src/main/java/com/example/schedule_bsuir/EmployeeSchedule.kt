@@ -55,13 +55,13 @@ data class Schedule(
 
 data class EmployeeSchedule(
     val employeeDto: EmployeeDto,
-    val studentGroupDto: StudentGroupDto,
-    val schedules: Map<String, List<Schedule>>,
-    val exams: List<Schedule>,
-    val startDate: String,
-    val endDate: String,
-    val startExamsDate: String,
-    val endExamsDate: String
+    //val studentGroupDto: StudentGroupDto,
+    var schedules: Map<String, List<Schedule>>,
+    var exams: List<Schedule>,
+    val startDate: String?,
+    val endDate: String?,
+    val startExamsDate: String?,
+    val endExamsDate: String?
 )
 
 data class StudentGroupDto(
@@ -96,13 +96,27 @@ fun getEmployeeSchedules(context: Context) {
         api.getEmployeeSchedule(urlId).enqueue(object : Callback<EmployeeSchedule> {
             override fun onResponse(call: Call<EmployeeSchedule>, response: Response<EmployeeSchedule>) {
                 if (response.isSuccessful) {
-                    val employeeSchedule = response.body()
+                    var employeeSchedule = response.body()
                     if (employeeSchedule != null) {
-                        // Получаем список Schedule для каждого ключа из schedules и проверяем auditories
-                        val schedulesWithAuditories = employeeSchedule.schedules.values.flatten().filter { it.auditories.any { it in auditories_full_name } }
-                        if (schedulesWithAuditories.isNotEmpty()) {
+
+                        val filteredSchedules = employeeSchedule.schedules.mapValues { (_, schedules) ->
+                            schedules.filter { schedule ->
+                                schedule.auditories.any { it in auditories_full_name }
+                            }
+                        }
+
+                        if (employeeSchedule != null && employeeSchedule.exams != null) {
+                            employeeSchedule.exams = employeeSchedule.exams.filter { exam ->
+                                exam.auditories != null && exam.auditories.any { it in auditories_full_name }
+                            }
+                        }
+
+                        if (filteredSchedules.isNotEmpty() || (employeeSchedule.exams != null && employeeSchedule.exams.isNotEmpty())) {
+
+                            employeeSchedule.schedules = filteredSchedules
                             allEmployeeSchedules.add(employeeSchedule)
                         }
+
                     }
 
                     if (employees_urlId.last() == urlId) { // Если это последний запрос
