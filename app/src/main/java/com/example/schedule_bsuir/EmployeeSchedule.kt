@@ -91,7 +91,7 @@ fun getEmployeeSchedules(context: Context) {
 
     val allEmployeeSchedules = mutableListOf<EmployeeSchedule>()
 
-    // Итерируемся по каждому urlId и отправляем запросы
+    //Итерируемся по каждому urlId и отправляем запросы
     for (urlId in employees_urlId) {
         api.getEmployeeSchedule(urlId).enqueue(object : Callback<EmployeeSchedule> {
             override fun onResponse(call: Call<EmployeeSchedule>, response: Response<EmployeeSchedule>) {
@@ -99,21 +99,26 @@ fun getEmployeeSchedules(context: Context) {
                     var employeeSchedule = response.body()
                     if (employeeSchedule != null) {
 
+                        //Фильтруем расписание по подходящим аудиториям
                         val filteredSchedules = employeeSchedule.schedules.mapValues { (_, schedules) ->
                             schedules.filter { schedule ->
                                 schedule.auditories.any { it in auditories_full_name }
                             }
                         }
 
+                        //Фильтруем экзамены по подходящим аудиториям
                         if (employeeSchedule != null && employeeSchedule.exams != null) {
                             employeeSchedule.exams = employeeSchedule.exams.filter { exam ->
                                 exam.auditories != null && exam.auditories.any { it in auditories_full_name }
                             }
                         }
 
-                        if (filteredSchedules.isNotEmpty() || (employeeSchedule.exams != null && employeeSchedule.exams.isNotEmpty())) {
+                        //Проверяем поля на пустоту и добавляем расписание преподавателя к общему списку
+                        if (filteredSchedules.any { it.value.isNotEmpty() } || (employeeSchedule.exams != null && employeeSchedule.exams.isNotEmpty())) {
 
                             employeeSchedule.schedules = filteredSchedules
+                            val filteredEmplSchedules = employeeSchedule.schedules.filterKeys { it.isNotEmpty() && employeeSchedule.schedules[it]!!.isNotEmpty() }
+                            employeeSchedule.schedules = filteredEmplSchedules
                             allEmployeeSchedules.add(employeeSchedule)
                         }
 
