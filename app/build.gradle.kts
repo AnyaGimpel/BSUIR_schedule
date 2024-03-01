@@ -71,12 +71,11 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.google.code.gson:gson:2.8.9")
 
+    implementation ("androidx.compose.material:material:1.2.0-alpha07")
+    implementation  ("androidx.navigation:navigation-compose:2.4.0-alpha10")
 
-    //implementation ("io.reactivex.rxjava2:rxjava:2.2.21")
-    //implementation ("io.reactivex.rxjava2:rxandroid:2.1.1")
-    //implementation ("com.squareup.retrofit2:adapter-rxjava2:2.9.0")
-
-    //implementation ("io.reactivex.rxjava3:rxjava:3.0.0")
-
+    //implementation ("androidx.compose.material3:material3-dropdown:1.0.0-alpha05")
+    implementation ("io.github.vanpra.compose-material-dialogs:datetime:0.8.1-rc")
+    coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:1.1.6")
 
 }
