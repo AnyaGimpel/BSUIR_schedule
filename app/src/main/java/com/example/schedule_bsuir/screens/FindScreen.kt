@@ -3,8 +3,6 @@ package com.example.schedule_bsuir.screens
 
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,28 +12,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import android.os.Bundle
-import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
 import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
-import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import java.time.DayOfWeek
 import java.util.Locale
 
@@ -56,40 +43,81 @@ fun FindScreen() {
 
 
     val dateDialogState = rememberMaterialDialogState()
+    var expandedDropdown by remember { mutableStateOf(false) }
+    var selectedTime by remember { mutableStateOf("Не выбрано") }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(30.dp).fillMaxWidth(),
 
-        androidx.compose.material3.Button(
-            onClick = {
-                dateDialogState.show()
-            },
-            modifier = Modifier.padding(top = 50.dp)
             ) {
-            Text(text = "Выбрать дату", color = Color.Black) // Черный цвет текста кнопки
+
+            Text(
+                text = "Выбрать дату",
+                color = Color.Black,
+                modifier = Modifier.clickable {
+                        dateDialogState.show()
+                    }
+
+            )
+
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(
+                text = formattedDate
+            )
+
         }
 
-        Spacer(modifier = Modifier.width(20.dp))
-        Text(
-            text = formattedDate,
-            modifier = Modifier.padding(top = 50.dp)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(20.dp).fillMaxWidth()
+        ) {
+            Text(
+                text = "Выбрать пару",
+                color = Color.Black,
+                modifier = Modifier.clickable {
+                    expandedDropdown = true // Устанавливаем значение true при клике
+                }
+            )
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(
+                text = selectedTime,
+                color = Color.Black
+            )
+
+            ExposedDropdownMenuBox(
+                items = listOf("Пара 1", "Пара 2", "Пара 3"),
+                onItemSelected = { selectedItem ->
+                    expandedDropdown = false
+                    selectedTime = selectedItem
+                },
+                expanded = expandedDropdown, // Передаем значение expandedDropdown
+                selectedTime = selectedTime
+            )
+
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(20.dp).fillMaxWidth(),
+
+            ) {
+            androidx.compose.material3.Button(onClick = { /*TODO*/ }) {
+                Text("Показать")
+            }
+        }
 
     }
+
+
+
     MaterialDialog(
         dialogState = dateDialogState,
         buttons = {
             positiveButton(text = "Ok") {
-                /*Toast.makeText(
-                    applicationContext,
-                    "Clicked ok",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                 */
             }
             negativeButton(text = "Отменить")
         }
@@ -105,5 +133,32 @@ fun FindScreen() {
             pickedDate = it
         }
     }
-
 }
+
+@Composable
+fun ExposedDropdownMenuBox(
+    items: List<String>,
+    onItemSelected: (String) -> Unit,
+    expanded: Boolean,
+    selectedTime: String
+) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        if (expanded) {
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { /* Ничего не делаем при закрытии */ },
+                modifier = Modifier.align(Alignment.TopStart)
+            ) {
+                items.forEach { item ->
+                    DropdownMenuItem(onClick = {
+                        onItemSelected(item)
+                    }) {
+                        Text(text = item)
+                    }
+                }
+            }
+        }
+
+    }
+}
+
