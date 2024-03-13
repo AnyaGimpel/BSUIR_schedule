@@ -20,6 +20,7 @@ import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
@@ -45,6 +46,7 @@ fun FindScreen() {
     val dateDialogState = rememberMaterialDialogState()
     var expandedDropdown by remember { mutableStateOf(false) }
     var selectedTime by remember { mutableStateOf("Не выбрано") }
+    var dropdownExpanded by remember { mutableStateOf(false) }
 
     Column {
         Row(
@@ -57,9 +59,10 @@ fun FindScreen() {
             Text(
                 text = "Выбрать дату",
                 color = Color.Black,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable {
                         dateDialogState.show()
-                    }
+                }
 
             )
 
@@ -78,6 +81,7 @@ fun FindScreen() {
             Text(
                 text = "Выбрать пару",
                 color = Color.Black,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable {
                     expandedDropdown = true // Устанавливаем значение true при клике
                 }
@@ -88,8 +92,15 @@ fun FindScreen() {
                 color = Color.Black
             )
 
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth(),
+
+            ) {
             ExposedDropdownMenuBox(
-                items = listOf("Пара 1", "Пара 2", "Пара 3"),
+                items = listOf("Пара 1: 09:00 - 10:20", "Пара 2: 09:00 - 10:20", "Пара 3: 09:00 - 10:20"),
                 onItemSelected = { selectedItem ->
                     expandedDropdown = false
                     selectedTime = selectedItem
@@ -97,7 +108,6 @@ fun FindScreen() {
                 expanded = expandedDropdown, // Передаем значение expandedDropdown
                 selectedTime = selectedTime
             )
-
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -106,7 +116,7 @@ fun FindScreen() {
 
             ) {
             androidx.compose.material3.Button(onClick = { /*TODO*/ }) {
-                Text("Показать")
+                Text("Найти")
             }
         }
 
@@ -147,7 +157,7 @@ fun ExposedDropdownMenuBox(
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { /* Ничего не делаем при закрытии */ },
-                modifier = Modifier.align(Alignment.TopStart)
+                modifier = Modifier.align(Alignment.BottomStart)
             ) {
                 items.forEach { item ->
                     DropdownMenuItem(onClick = {
