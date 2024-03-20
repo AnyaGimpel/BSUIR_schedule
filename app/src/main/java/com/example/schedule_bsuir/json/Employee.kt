@@ -1,8 +1,9 @@
-package com.example.schedule_bsuir
+package com.example.schedule_bsuir.json
 
 import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -44,10 +45,12 @@ fun getEmployees(context: Context) {
                 val employees = response.body()
 
                 // Преобразование в JSON
-                val gson = Gson()
-                val json = gson.toJson(employees)
+                val gson = GsonBuilder()
+                    .setPrettyPrinting()
+                    .create()
 
                 // Сохранение JSON в файл
+                val json = gson.toJson(employees)
                 val file = File(context.getExternalFilesDir(null), "employees.json")
                 try {
                     file.writeText(json)

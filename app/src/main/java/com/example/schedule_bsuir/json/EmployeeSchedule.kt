@@ -1,4 +1,4 @@
-package com.example.schedule_bsuir
+package com.example.schedule_bsuir.json
 
 import android.content.Context
 import android.util.Log
@@ -10,9 +10,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import java.io.File
-import com.google.gson.reflect.TypeToken
+import com.google.gson.GsonBuilder
 import retrofit2.http.Path
 import kotlin.collections.any
+
 
 
 interface EmployeeScheduleAPI {
@@ -75,13 +76,17 @@ data class StudentGroupDto(
 
 fun getEmployeeSchedules(context: Context) {
 
+    val gson = GsonBuilder()
+        .setPrettyPrinting()
+        .create()
+
     val employees_urlId = getEmployeesUrlId(context)
     Log.d("MainActivity", employees_urlId.toString())
 
     val auditories_full_name = getFulAudName(context)
     Log.d("MainActivity", auditories_full_name.toString())
 
-    val gson = Gson()
+    //val gson = Gson()
     val retrofit = Retrofit.Builder()
         .baseUrl("https://iis.bsuir.by/api/v1/")
         .addConverterFactory(GsonConverterFactory.create())
@@ -93,6 +98,7 @@ fun getEmployeeSchedules(context: Context) {
 
     //Итерируемся по каждому urlId и отправляем запросы
     for (urlId in employees_urlId) {
+        //Log.d("MainActivity", "жооооопааааа тестируем вход")
         api.getEmployeeSchedule(urlId).enqueue(object : Callback<EmployeeSchedule> {
             override fun onResponse(call: Call<EmployeeSchedule>, response: Response<EmployeeSchedule>) {
                 if (response.isSuccessful) {
@@ -122,11 +128,12 @@ fun getEmployeeSchedules(context: Context) {
                             allEmployeeSchedules.add(employeeSchedule)
                         }
 
+                    } else{
                     }
 
-                    if (employees_urlId.last() == urlId) { // Если это последний запрос
+                    if (employees_urlId.last() == urlId) {
 
-                        val json = allEmployeeSchedules.joinToString(separator = "\n") { gson.toJson(it) }
+                        val json = gson.toJson(allEmployeeSchedules)
                         val file = File(context.getExternalFilesDir(null), "employeeSchedule.json")
                         try {
                             file.writeText(json)
@@ -134,9 +141,11 @@ fun getEmployeeSchedules(context: Context) {
                         } catch (e: Exception) {
                             Log.e("MainActivity", "Ошибка при записи данных в файл: $e")
                         }
+
+
                     }
                 } else {
-                    // Обработка ошибки
+
                 }
             }
 

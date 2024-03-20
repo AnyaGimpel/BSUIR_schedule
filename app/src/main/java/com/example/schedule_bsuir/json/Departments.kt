@@ -1,8 +1,9 @@
-package com.example.schedule_bsuir
+package com.example.schedule_bsuir.json
 
 import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -35,11 +36,12 @@ fun getDepartments(context: Context) {
             if (response.isSuccessful) {
                 val departments = response.body()
 
-                // Преобразование в JSON
-                val gson = Gson()
-                val json = gson.toJson(departments)
 
-                // Сохранение JSON в файл
+                val gson = GsonBuilder()
+                    .setPrettyPrinting()
+                    .create()
+
+                val json = gson.toJson(departments)
                 val file = File(context.getExternalFilesDir(null), "departments.json")
                 try {
                     file.writeText(json)
@@ -47,6 +49,8 @@ fun getDepartments(context: Context) {
                 } catch (e: Exception) {
                     Log.e("MainActivity", "Ошибка при записи данных в файл: $e")
                 }
+
+
             } else {
                 // Обработка ошибки
             }

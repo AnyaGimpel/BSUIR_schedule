@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
             window.navigationBarColor = getColor(R.color.white)
             Schedule_bsuirTheme {
                 SetupAppContent()
+
             }
         }
     }
