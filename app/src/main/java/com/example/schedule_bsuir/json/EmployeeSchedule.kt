@@ -98,7 +98,6 @@ fun getEmployeeSchedules(context: Context) {
 
     //Итерируемся по каждому urlId и отправляем запросы
     for (urlId in employees_urlId) {
-        //Log.d("MainActivity", "жооооопааааа тестируем вход")
         api.getEmployeeSchedule(urlId).enqueue(object : Callback<EmployeeSchedule> {
             override fun onResponse(call: Call<EmployeeSchedule>, response: Response<EmployeeSchedule>) {
                 if (response.isSuccessful) {
@@ -174,3 +173,21 @@ fun getFulAudName(context: Context): List<String> {
     val auditories_full_name = auditories.map { it.name + "-" + it.buildingNumber.name }
     return auditories_full_name
 }
+
+fun readEmployeeSchedule(context: Context): List<EmployeeSchedule> {
+    val externalFilesDir = context.getExternalFilesDir(null)
+    val jsonFile = File(externalFilesDir, "EmployeeSchedule.json")
+    val jsonString = jsonFile.readText()
+
+    val gson = Gson()
+    return gson.fromJson(jsonString, Array<EmployeeSchedule>::class.java).toList()
+}
+
+/*
+fun sortedEmployeeSchedule(context: Context): List<EmployeeSchedule> {
+
+    return
+}
+
+
+ */

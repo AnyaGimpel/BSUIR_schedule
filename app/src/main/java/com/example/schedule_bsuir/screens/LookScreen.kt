@@ -1,6 +1,8 @@
 package com.example.schedule_bsuir.screens
 
+import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,12 +29,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.schedule_bsuir.json.EmployeeSchedule
+import com.example.schedule_bsuir.json.getWeekNumber
+import com.example.schedule_bsuir.json.readEmployeeSchedule
+import com.google.gson.Gson
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import java.io.File
+import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Date
 import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -50,6 +59,13 @@ fun LookScreen(){
                 .format(pickedDate)
         }
     }
+    val formattedDate1 by remember {
+        derivedStateOf {
+            DateTimeFormatter
+                .ofPattern("dd.MM.yyyy", Locale("ru"))
+                .format(pickedDate)
+        }
+    }
 
 
     val dateDialogState = rememberMaterialDialogState()
@@ -57,9 +73,16 @@ fun LookScreen(){
     var selectedAud by remember { mutableStateOf("Не выбрано") }
     var dropdownExpanded by remember { mutableStateOf(false) }
 
-/*
+    var selectedDayOfWeek by remember {
+        mutableStateOf(
+            SimpleDateFormat("EEEE", Locale("ru")).format(Date()).capitalize()
+        )
+    }
+
+
 
     // Функция для чтения данных из JSON
+    /*
     fun readEmployeeSchedule(context: Context): List<EmployeeSchedule> {
         val externalFilesDir = context.getExternalFilesDir(null)
         val jsonFile = File(externalFilesDir, "EmployeeSchedule.json")
@@ -69,13 +92,16 @@ fun LookScreen(){
         return gson.fromJson(jsonString, Array<EmployeeSchedule>::class.java).toList()
     }
 
+
+     */
     var employeeSchedules by remember {
         mutableStateOf(emptyList<EmployeeSchedule>())
     }
 
     employeeSchedules = readEmployeeSchedule(context)
+    Log.d("Filtered Schedule", selectedDayOfWeek)
 
- */
+
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -144,31 +170,76 @@ fun LookScreen(){
 
             ) {
             Button(onClick = {
+
                 /*
-                val filteredSchedules = employeeSchedules.filter { schedule ->
-                    schedule.schedules.any { (_, schedules) ->
-                        schedules.any { schedule ->
-                            schedule.auditories.contains("615")
-                        }
-                    }
+                val filteredSchedules1 = employeeSchedules.filter { schedule ->
+                    schedule.schedules["Понедельник"]?.any { schedule ->
+                        schedule.auditories.contains("615-2 к.") && schedule.weekNumber.contains(3)
+                    } ?: false
                 }
+
+                filteredSchedules1.forEach { schedule ->
+                    Log.d("Filtered Schedule 1", schedule.toString())
+                    Log.d("Filtered Schedule", "/n")
+                }
+
+                val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
+                    employeeSchedule.schedules["Понедельник"]?.filter { schedule ->
+                        schedule.auditories.contains("615-2 к.") && schedule.weekNumber.contains(3)
+                    } ?: emptyList()
+                }
+
 
                 // Вывод отфильтрованных данных
                 filteredSchedules.forEach { schedule ->
                     Log.d("Filtered Schedule", schedule.toString())
                 }
 
+
                  */
+
+                val weekNumber = getWeekNumber(context, formattedDate1)
+                if (weekNumber != null) {
+                    Log.d("WeekNumber", "Номер недели для $formattedDate1: $weekNumber")
+                } else {
+                    Log.d("WeekNumber", "Номер недели для $formattedDate1 не найден.")
+                }
+
+                val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
+                    val filteredSchedules = employeeSchedule.schedules[selectedDayOfWeek]?.filter { schedule ->
+                        schedule.auditories.contains("615-2 к.") && schedule.weekNumber.contains(3)
+                    } ?: emptyList()
+
+                    if (filteredSchedules.isNotEmpty()) {
+                        listOf(
+                            employeeSchedule.copy(schedules = mapOf("selectedDayOfWeek" to filteredSchedules))
+                        )
+                    } else {
+                        emptyList()
+                    }
+                }
+
+                filteredSchedules.forEach { schedule ->
+                    Log.d("Filtered Schedule", schedule.toString())
+                }
+
             }) {
                 Text("Показать")
             }
         }
     }
 
+    fun updateSelectedDayOfWeek(date: LocalDate) {
+        val dayOfWeek = SimpleDateFormat("EEEE", Locale("ru")).format(java.sql.Date.valueOf(date.toString()))
+        selectedDayOfWeek = dayOfWeek.capitalize()
+    }
+
     MaterialDialog(
         dialogState = dateDialogState,
         buttons = {
             positiveButton(text = "Ok") {
+                updateSelectedDayOfWeek(pickedDate)
+                Log.d("Filtered Schedule", selectedDayOfWeek)
             }
             negativeButton(text = "Отменить")
         }

@@ -2,6 +2,8 @@ package com.example.schedule_bsuir
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.ProgressBar
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Button
@@ -17,7 +19,7 @@ class FirstActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Schedule_bsuirTheme {
-                getEmployees(this)
+                //getEmployees(this)
                 //getEmployeeSchedules(this)
                 MainScreen()
             }
