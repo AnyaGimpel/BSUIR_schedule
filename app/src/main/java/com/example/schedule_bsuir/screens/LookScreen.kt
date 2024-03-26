@@ -197,30 +197,32 @@ fun LookScreen(){
 
 
                  */
+                val audNumb = selectedAud + "-2 к."
+                Log.d("audNumb", audNumb)
+                val weekNumb = getWeekNumber(context, formattedDate1)
+                if (weekNumb != null) {
+                    Log.d("WeekNumber", "Номер недели для $formattedDate1: $weekNumb")
 
-                val weekNumber = getWeekNumber(context, formattedDate1)
-                if (weekNumber != null) {
-                    Log.d("WeekNumber", "Номер недели для $formattedDate1: $weekNumber")
+                    val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
+                        val filteredSchedules = employeeSchedule.schedules[selectedDayOfWeek]?.filter { schedule ->
+                            schedule.auditories.contains(audNumb) && schedule.weekNumber.contains(weekNumb)
+                        } ?: emptyList()
+
+                        if (filteredSchedules.isNotEmpty()) {
+                            listOf(
+                                employeeSchedule.copy(schedules = mapOf("selectedDayOfWeek" to filteredSchedules))
+                            )
+                        } else {
+                            emptyList()
+                        }
+                    }
+
+                    filteredSchedules.forEach { schedule ->
+                        Log.d("Filtered Schedule", schedule.toString())
+                    }
+
                 } else {
                     Log.d("WeekNumber", "Номер недели для $formattedDate1 не найден.")
-                }
-
-                val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
-                    val filteredSchedules = employeeSchedule.schedules[selectedDayOfWeek]?.filter { schedule ->
-                        schedule.auditories.contains("615-2 к.") && schedule.weekNumber.contains(3)
-                    } ?: emptyList()
-
-                    if (filteredSchedules.isNotEmpty()) {
-                        listOf(
-                            employeeSchedule.copy(schedules = mapOf("selectedDayOfWeek" to filteredSchedules))
-                        )
-                    } else {
-                        emptyList()
-                    }
-                }
-
-                filteredSchedules.forEach { schedule ->
-                    Log.d("Filtered Schedule", schedule.toString())
                 }
 
             }) {
