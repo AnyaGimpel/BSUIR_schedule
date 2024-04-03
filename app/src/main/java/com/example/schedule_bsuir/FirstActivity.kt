@@ -9,6 +9,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
+import com.example.schedule_bsuir.json.getAuditories
+import com.example.schedule_bsuir.json.getDepartments
+import com.example.schedule_bsuir.json.getEmployeeSchedules
+import com.example.schedule_bsuir.json.getEmployees
 import com.example.schedule_bsuir.json.readAuditories
 import com.example.schedule_bsuir.ui.theme.Schedule_bsuirTheme
 
@@ -19,7 +23,7 @@ class FirstActivity : ComponentActivity() {
             Schedule_bsuirTheme {
                 //getEmployees(this)
                 //getEmployeeSchedules(this)
-                readAuditories(this)
+                //readAuditories(this)
                 MainScreen()
             }
         }
@@ -41,4 +45,5 @@ fun NavigateButton() {
 @Composable
 fun MainScreen() {
     NavigateButton()
+
 }

@@ -21,18 +21,20 @@ interface AuditoriesAPI {
 data class Auditories(
     val id: Int,
     val name: String,
-    val note: String?,
-    val capacity: Int?,
-    val auditoryType: AuditoryType,
+    //val note: String?,
+    //val capacity: Int?,
+    //val auditoryType: AuditoryType,
     val buildingNumber: BuildingNumber,
     val department: DepartmentInfo
 )
 
-data class AuditoryType(
+/*data class AuditoryType(
     val id: Int,
     val name: String,
     val abbrev: String
 )
+
+ */
 
 data class BuildingNumber(
     val id: Int,
@@ -67,26 +69,25 @@ fun getAuditories(context: Context) {
                     .setPrettyPrinting()
                     .create()
 
-
                 // Сохранение JSON в файл
                 val json = gson.toJson(filteredAuditories)
                 val file = File(context.getExternalFilesDir(null), "auditories.json")
                 try {
                     file.writeText(json)
-                    Log.d("MainActivity", "Данные успешно записаны в файл auditories.json")
+                    Log.d("Write to json", "Данные успешно записаны в файл auditories.json")
                 } catch (e: Exception) {
-                    Log.e("MainActivity", "Ошибка при записи данных в файл: $e")
+                    Log.e("Write to json", "Ошибка при записи данных в файл: $e")
                 }
 
 
             } else {
-                // Обработка ошибки
+                Log.e("API connection", "Ошибка подключения API")
             }
 
         }
 
         override fun onFailure(call: Call<Array<Auditories>>, t: Throwable) {
-            // Обработка ошибки
+            Log.e("API connection", "Ошибка подключения API")
         }
     })
 }
@@ -94,13 +95,10 @@ fun getAuditories(context: Context) {
 fun readAuditories(context: Context) {
     val gson = Gson()
     val file = File(context.getExternalFilesDir(null), "auditories.json")
-    Log.d("MainActivity", "Путь к файлу: ${file.absolutePath}")
     val jsonString = file.readText()
-    val auditories_show = gson.fromJson(jsonString, Array<Auditories>::class.java)
+    val auditoriesShow = gson.fromJson(jsonString, Array<Auditories>::class.java)
 
-    // Вывод данных в консоль
-    for (auditories in auditories_show) {
+    for (auditories in auditoriesShow) {
         Log.d("MainActivity", "Имя аудитории: ${auditories.name}, Корпус: ${auditories.buildingNumber.name}, id кафедра: ${auditories.department.idDepartment}")
-        // Добавьте другие свойства по необходимости
     }
 }

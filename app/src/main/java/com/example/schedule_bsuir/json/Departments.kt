@@ -36,7 +36,6 @@ fun getDepartments(context: Context) {
             if (response.isSuccessful) {
                 val departments = response.body()
 
-
                 val gson = GsonBuilder()
                     .setPrettyPrinting()
                     .create()
@@ -52,13 +51,13 @@ fun getDepartments(context: Context) {
 
 
             } else {
-                // Обработка ошибки
+                Log.e("API connection", "Ошибка подключения API")
             }
 
         }
 
         override fun onFailure(call: Call<Array<Departments>>, t: Throwable) {
-            // Обработка ошибки
+            Log.e("API connection", "Ошибка подключения API")
         }
     })
 }
@@ -72,6 +71,5 @@ fun readDepartments(context: Context) {
     // Вывод данных в консоль
     for (department in departments_show) {
         Log.d("MainActivity", "ID: ${department.id}, Имя: ${department.name}")
-        // Добавьте другие свойства по необходимости
     }
 }

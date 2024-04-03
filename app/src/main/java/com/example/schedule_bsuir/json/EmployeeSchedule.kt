@@ -86,7 +86,6 @@ fun getEmployeeSchedules(context: Context) {
     val auditories_full_name = getFulAudName(context)
     Log.d("MainActivity", auditories_full_name.toString())
 
-    //val gson = Gson()
     val retrofit = Retrofit.Builder()
         .baseUrl("https://iis.bsuir.by/api/v1/")
         .addConverterFactory(GsonConverterFactory.create())
@@ -96,29 +95,30 @@ fun getEmployeeSchedules(context: Context) {
 
     val allEmployeeSchedules = mutableListOf<EmployeeSchedule>()
 
-    //Итерируемся по каждому urlId и отправляем запросы
+    // Итерируемся по каждому urlId и отправляем запросы
     for (urlId in employees_urlId) {
         api.getEmployeeSchedule(urlId).enqueue(object : Callback<EmployeeSchedule> {
             override fun onResponse(call: Call<EmployeeSchedule>, response: Response<EmployeeSchedule>) {
                 if (response.isSuccessful) {
-                    var employeeSchedule = response.body()
+                    Log.d("ВНИМАНИЕ!", "С API проблем нет")
+                    val employeeSchedule = response.body()
                     if (employeeSchedule != null) {
 
-                        //Фильтруем расписание по подходящим аудиториям
+                        // Фильтруем расписание по подходящим аудиториям
                         val filteredSchedules = employeeSchedule.schedules.mapValues { (_, schedules) ->
                             schedules.filter { schedule ->
                                 schedule.auditories.any { it in auditories_full_name }
                             }
                         }
 
-                        //Фильтруем экзамены по подходящим аудиториям
-                        if (employeeSchedule != null && employeeSchedule.exams != null) {
+                        // Фильтруем экзамены по подходящим аудиториям
+                        if (employeeSchedule.exams != null) {
                             employeeSchedule.exams = employeeSchedule.exams.filter { exam ->
                                 exam.auditories != null && exam.auditories.any { it in auditories_full_name }
                             }
                         }
 
-                        //Проверяем поля на пустоту и добавляем расписание преподавателя к общему списку
+                        // Проверяем поля на пустоту и добавляем расписание преподавателя к общему списку
                         if (filteredSchedules.any { it.value.isNotEmpty() } || (employeeSchedule.exams != null && employeeSchedule.exams.isNotEmpty())) {
 
                             employeeSchedule.schedules = filteredSchedules
@@ -127,7 +127,8 @@ fun getEmployeeSchedules(context: Context) {
                             allEmployeeSchedules.add(employeeSchedule)
                         }
 
-                    } else{
+                    } else {
+                        Log.e("MainActivity", "Получено пустое расписание для urlId: $urlId")
                     }
 
                     if (employees_urlId.last() == urlId) {
@@ -141,15 +142,14 @@ fun getEmployeeSchedules(context: Context) {
                             Log.e("MainActivity", "Ошибка при записи данных в файл: $e")
                         }
 
-
                     }
                 } else {
-
+                    Log.e("MainActivity", "Ошибка при выполнении запроса: ${response.code()}")
                 }
             }
 
             override fun onFailure(call: Call<EmployeeSchedule>, t: Throwable) {
-                // Обработка ошибки
+                Log.e("MainActivity", "Ошибка при выполнении запроса: ${t.message}")
             }
         })
     }
@@ -182,12 +182,40 @@ fun readEmployeeSchedule(context: Context): List<EmployeeSchedule> {
     val gson = Gson()
     return gson.fromJson(jsonString, Array<EmployeeSchedule>::class.java).toList()
 }
-
 /*
-fun sortedEmployeeSchedule(context: Context): List<EmployeeSchedule> {
+fun filterEmployeeSchedule(employeeSchedules: List<EmployeeSchedule>,audNumb: String, weekNumb: Int, selectedDayOfWeek: String): List<EmployeeSchedule> {
+    val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
+        val filteredSchedules = employeeSchedule.schedules[selectedDayOfWeek]?.filter { schedule ->
+            schedule.auditories.contains(audNumb) && schedule.weekNumber.contains(weekNumb)
+        } ?: emptyList()
 
-    return
+        if (filteredSchedules.isNotEmpty()) {
+            listOf(
+                employeeSchedule.copy(schedules = mapOf("selectedDayOfWeek" to filteredSchedules))
+            )
+        } else {
+            emptyList()
+        }
+    }
+    return filteredSchedules.toList()
 }
 
 
  */
+fun filterEmployeeSchedule(employeeSchedules: List<EmployeeSchedule>, audNumb: String, weekNumb: Int, selectedDayOfWeek: String): List<EmployeeSchedule> {
+    val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
+        employeeSchedule.schedules[selectedDayOfWeek]?.filter { schedule ->
+            schedule.auditories.contains(audNumb) && schedule.weekNumber.contains(weekNumb)
+        }?.map { filteredSchedule ->
+            // Создаем отдельную запись для каждого расписания
+            employeeSchedule.copy(
+                schedules = mapOf(selectedDayOfWeek to listOf(filteredSchedule))
+            )
+        } ?: emptyList()
+    }
+
+
+    return filteredSchedules.sortedBy { schedule ->
+        schedule.schedules[selectedDayOfWeek]?.firstOrNull()?.startLessonTime
+    }
+}

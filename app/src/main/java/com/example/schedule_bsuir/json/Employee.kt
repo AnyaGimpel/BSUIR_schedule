@@ -44,12 +44,10 @@ fun getEmployees(context: Context) {
             if (response.isSuccessful) {
                 val employees = response.body()
 
-                // Преобразование в JSON
                 val gson = GsonBuilder()
                     .setPrettyPrinting()
                     .create()
 
-                // Сохранение JSON в файл
                 val json = gson.toJson(employees)
                 val file = File(context.getExternalFilesDir(null), "employees.json")
                 try {
@@ -59,13 +57,13 @@ fun getEmployees(context: Context) {
                     Log.e("MainActivity", "Ошибка при записи данных в файл: $e")
                 }
             } else {
-                // Обработка ошибки
+                Log.e("API connection", "Ошибка подключения API")
             }
 
         }
 
         override fun onFailure(call: Call<Array<Employee>>, t: Throwable) {
-            // Обработка ошибки
+            Log.e("API connection", "Ошибка подключения API")
         }
     })
 }
@@ -79,6 +77,5 @@ fun readEmployees(context: Context) {
     // Вывод данных в консоль
     for (employee in employees_show) {
         Log.d("MainActivity", "Имя: ${employee.firstName}, Фамилия: ${employee.lastName}")
-        // Добавьте другие свойства по необходимости
     }
 }

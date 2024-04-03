@@ -1,9 +1,9 @@
 package com.example.schedule_bsuir.screens
 
-import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,13 +11,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Card
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,14 +35,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.schedule_bsuir.json.EmployeeSchedule
+import com.example.schedule_bsuir.json.filterEmployeeSchedule
 import com.example.schedule_bsuir.json.getWeekNumber
 import com.example.schedule_bsuir.json.readEmployeeSchedule
-import com.google.gson.Gson
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
-import java.io.File
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -48,31 +54,26 @@ import java.util.Locale
 @Composable
 fun LookScreen(){
     val context = LocalContext.current
-    var pickedDate by remember {
-        mutableStateOf(LocalDate.now())
-    }
+    var pickedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedAud by remember { mutableStateOf("Не выбрано") }
+    var expandedDropdown by remember { mutableStateOf(false) }
+    val dateDialogState = rememberMaterialDialogState()
+
+    var employeeSchedules by remember { mutableStateOf(emptyList<EmployeeSchedule>()) }
+    var filteredSchedules by remember { mutableStateOf(emptyList<EmployeeSchedule>()) }
 
     val formattedDate by remember {
         derivedStateOf {
-            DateTimeFormatter
-                .ofPattern("dd MMMM yyyy", Locale("ru"))
-                .format(pickedDate)
+            // Форматирование выбранной даты для отображения
+            pickedDate.format(DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale("ru")))
         }
     }
     val formattedDate1 by remember {
         derivedStateOf {
-            DateTimeFormatter
-                .ofPattern("dd.MM.yyyy", Locale("ru"))
-                .format(pickedDate)
+            // Форматирование выбранной даты для использования в запросах
+            pickedDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale("ru")))
         }
     }
-
-
-    val dateDialogState = rememberMaterialDialogState()
-    var expandedDropdown by remember { mutableStateOf(false) }
-    var selectedAud by remember { mutableStateOf("Не выбрано") }
-    var dropdownExpanded by remember { mutableStateOf(false) }
-
     var selectedDayOfWeek by remember {
         mutableStateOf(
             SimpleDateFormat("EEEE", Locale("ru")).format(Date()).capitalize()
@@ -80,36 +81,19 @@ fun LookScreen(){
     }
 
 
-
-    // Функция для чтения данных из JSON
-    /*
-    fun readEmployeeSchedule(context: Context): List<EmployeeSchedule> {
-        val externalFilesDir = context.getExternalFilesDir(null)
-        val jsonFile = File(externalFilesDir, "EmployeeSchedule.json")
-        val jsonString = jsonFile.readText()
-
-        val gson = Gson()
-        return gson.fromJson(jsonString, Array<EmployeeSchedule>::class.java).toList()
+    LaunchedEffect(Unit) {
+        employeeSchedules = readEmployeeSchedule(context)
     }
-
-
-     */
-    var employeeSchedules by remember {
-        mutableStateOf(emptyList<EmployeeSchedule>())
-    }
-
-    employeeSchedules = readEmployeeSchedule(context)
-    Log.d("Filtered Schedule", selectedDayOfWeek)
 
 
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(30.dp).fillMaxWidth(),
-
+            modifier = Modifier
+                .padding(30.dp)
+                .fillMaxWidth(),
             ) {
-
             Text(
                 text = "Выбрать дату",
                 color = Color.Black,
@@ -117,20 +101,17 @@ fun LookScreen(){
                 modifier = Modifier.clickable {
                     dateDialogState.show()
                 }
-
             )
-
             Spacer(modifier = Modifier.width(20.dp))
-            Text(
-                text = formattedDate
-            )
-
+            Text(text = formattedDate)
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(20.dp).fillMaxWidth()
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth()
         ) {
             Text(
                 text = "Выбрать аудиторию",
@@ -145,13 +126,12 @@ fun LookScreen(){
                 text = selectedAud,
                 color = Color.Black
             )
-
         }
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth(),
-
             ) {
             ExposedDropdownMenuBox2(
                 items = listOf("502","601","603","604","605","611","612","613","615"),
@@ -163,59 +143,22 @@ fun LookScreen(){
                 selectedAud = selectedAud
             )
         }
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(20.dp).fillMaxWidth(),
-
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth(),
             ) {
             Button(onClick = {
-
-                /*
-                val filteredSchedules1 = employeeSchedules.filter { schedule ->
-                    schedule.schedules["Понедельник"]?.any { schedule ->
-                        schedule.auditories.contains("615-2 к.") && schedule.weekNumber.contains(3)
-                    } ?: false
-                }
-
-                filteredSchedules1.forEach { schedule ->
-                    Log.d("Filtered Schedule 1", schedule.toString())
-                    Log.d("Filtered Schedule", "/n")
-                }
-
-                val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
-                    employeeSchedule.schedules["Понедельник"]?.filter { schedule ->
-                        schedule.auditories.contains("615-2 к.") && schedule.weekNumber.contains(3)
-                    } ?: emptyList()
-                }
-
-
-                // Вывод отфильтрованных данных
-                filteredSchedules.forEach { schedule ->
-                    Log.d("Filtered Schedule", schedule.toString())
-                }
-
-
-                 */
-                val audNumb = selectedAud + "-2 к."
+                val audNumb = "$selectedAud-2 к."
                 Log.d("audNumb", audNumb)
                 val weekNumb = getWeekNumber(context, formattedDate1)
                 if (weekNumb != null) {
                     Log.d("WeekNumber", "Номер недели для $formattedDate1: $weekNumb")
 
-                    val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
-                        val filteredSchedules = employeeSchedule.schedules[selectedDayOfWeek]?.filter { schedule ->
-                            schedule.auditories.contains(audNumb) && schedule.weekNumber.contains(weekNumb)
-                        } ?: emptyList()
-
-                        if (filteredSchedules.isNotEmpty()) {
-                            listOf(
-                                employeeSchedule.copy(schedules = mapOf("selectedDayOfWeek" to filteredSchedules))
-                            )
-                        } else {
-                            emptyList()
-                        }
-                    }
+                    filteredSchedules = filterEmployeeSchedule(employeeSchedules, audNumb, weekNumb, selectedDayOfWeek)
 
                     filteredSchedules.forEach { schedule ->
                         Log.d("Filtered Schedule", schedule.toString())
@@ -224,18 +167,29 @@ fun LookScreen(){
                 } else {
                     Log.d("WeekNumber", "Номер недели для $formattedDate1 не найден.")
                 }
-
             }) {
                 Text("Показать")
             }
         }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth(),
+        ) {
+            DisplayFilteredSchedules(filteredSchedules = filteredSchedules)
+        }
     }
 
+    // Обновление выбранного дня недели
     fun updateSelectedDayOfWeek(date: LocalDate) {
         val dayOfWeek = SimpleDateFormat("EEEE", Locale("ru")).format(java.sql.Date.valueOf(date.toString()))
         selectedDayOfWeek = dayOfWeek.capitalize()
     }
 
+    // Отображение Material Dialog для выбора даты
     MaterialDialog(
         dialogState = dateDialogState,
         buttons = {
@@ -258,7 +212,6 @@ fun LookScreen(){
         }
     }
 }
-
 
 @Composable
 fun ExposedDropdownMenuBox2(
@@ -283,7 +236,57 @@ fun ExposedDropdownMenuBox2(
                 }
             }
         }
-
     }
 }
+
+@Composable
+fun DisplayFilteredSchedules(filteredSchedules: List<EmployeeSchedule>) {
+    LazyColumn {
+        items(filteredSchedules) { schedule ->
+            Card(Modifier.padding(8.dp)) {
+                Column(
+                    Modifier
+                        .padding(16.dp)
+                        .width(300.dp)) {
+                    schedule.schedules.forEach { (key, value) ->
+                        value.forEach { scheduleItem ->
+                            Column{
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text ="${scheduleItem.startLessonTime}",
+                                        color = Color.Black,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text ="${scheduleItem.subject} (${scheduleItem.lessonTypeAbbrev})"
+                                    )
+                                }
+
+
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    modifier = Modifier.fillMaxWidth()
+
+                                ) {
+                                    Text(
+                                        text = "${scheduleItem.endLessonTime}",
+                                        color = Color.Gray,
+                                        fontSize = 14.sp
+                                    )
+                                    val groupNames = scheduleItem.studentGroups.joinToString { it.name }
+                                    Text("$groupNames")
+                                    Text("${schedule.employeeDto.urlId}")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
