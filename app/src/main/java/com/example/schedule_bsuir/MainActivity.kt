@@ -1,8 +1,10 @@
 package com.example.schedule_bsuir
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -11,11 +13,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.rememberNavController
 import com.example.schedule_bsuir.navigation.BottomNavigationBar
 import com.example.schedule_bsuir.navigation.NavHostContainer
+import com.example.schedule_bsuir.screens.LookScreen
 import com.example.schedule_bsuir.ui.theme.Schedule_bsuirTheme
 
 
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -23,26 +27,17 @@ class MainActivity : ComponentActivity() {
             window.navigationBarColor = getColor(R.color.white)
             Schedule_bsuirTheme {
                 SetupAppContent()
-
             }
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SetupAppContent() {
-    val navController = rememberNavController()
     Surface(color = Color.White) {
-        Scaffold(
-            bottomBar = {
-                BottomNavigationBar(navController = navController)
-            },
-            content = { padding ->
-                NavHostContainer(navController = navController, padding = padding)
-            }
-        )
+        LookScreen()
     }
 }
-
 

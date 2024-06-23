@@ -11,6 +11,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import java.io.File
+import java.io.IOException
 
 
 interface AuditoriesAPI {
@@ -48,7 +49,7 @@ data class DepartmentInfo(
     val nameAndAbbrev: String
 )
 
-fun getAuditories(context: Context) {
+ fun getAuditories(context: Context) {
     val retrofit = Retrofit.Builder()
         .baseUrl("https://iis.bsuir.by")
         .addConverterFactory(GsonConverterFactory.create())
@@ -72,22 +73,35 @@ fun getAuditories(context: Context) {
                 // Сохранение JSON в файл
                 val json = gson.toJson(filteredAuditories)
                 val file = File(context.getExternalFilesDir(null), "auditories.json")
+
+
+                // Проверка, создан ли файл перед записью
+                if (!file.exists()) {
+                    try {
+                        file.createNewFile()
+                    } catch (e: IOException) {
+                        Log.e("Write to json", "Ошибка при создании файла (список аудиторий): $e")
+                        return
+                    }
+                }
+
+
                 try {
                     file.writeText(json)
                     Log.d("Write to json", "Данные успешно записаны в файл auditories.json")
                 } catch (e: Exception) {
-                    Log.e("Write to json", "Ошибка при записи данных в файл: $e")
+                    Log.e("Write to json", "Ошибка при записи данных в файл (список аудиторий): $e")
                 }
 
 
             } else {
-                Log.e("API connection", "Ошибка подключения API")
+                Log.e("API connection", "Ошибка подключения API (список аудиторий)")
             }
 
         }
 
         override fun onFailure(call: Call<Array<Auditories>>, t: Throwable) {
-            Log.e("API connection", "Ошибка подключения API")
+            Log.e("API connection", "Ошибка подключения API (список аудиторий)")
         }
     })
 }

@@ -12,6 +12,7 @@ import retrofit2.http.GET
 import java.io.File
 import com.google.gson.GsonBuilder
 import retrofit2.http.Path
+import java.io.IOException
 import kotlin.collections.any
 
 
@@ -81,10 +82,10 @@ fun getEmployeeSchedules(context: Context) {
         .create()
 
     val employees_urlId = getEmployeesUrlId(context)
-    Log.d("MainActivity", employees_urlId.toString())
+    //Log.d("MainActivity", employees_urlId.toString())
 
     val auditories_full_name = getFulAudName(context)
-    Log.d("MainActivity", auditories_full_name.toString())
+    //Log.d("MainActivity", auditories_full_name.toString())
 
     val retrofit = Retrofit.Builder()
         .baseUrl("https://iis.bsuir.by/api/v1/")
@@ -100,20 +101,23 @@ fun getEmployeeSchedules(context: Context) {
         api.getEmployeeSchedule(urlId).enqueue(object : Callback<EmployeeSchedule> {
             override fun onResponse(call: Call<EmployeeSchedule>, response: Response<EmployeeSchedule>) {
                 if (response.isSuccessful) {
-                    Log.d("ВНИМАНИЕ!", "С API проблем нет")
                     val employeeSchedule = response.body()
                     if (employeeSchedule != null) {
+                        Log.e("MainActivity", "Получено расписание для urlId: $urlId")
+                        // Инициализируем schedules, если оно null
+                        val schedules = employeeSchedule.schedules ?: emptyMap()
+                        val exams = employeeSchedule.exams ?: emptyList()
 
                         // Фильтруем расписание по подходящим аудиториям
-                        val filteredSchedules = employeeSchedule.schedules.mapValues { (_, schedules) ->
+                        val filteredSchedules = schedules.mapValues { (_, schedules) ->
                             schedules.filter { schedule ->
                                 schedule.auditories.any { it in auditories_full_name }
                             }
                         }
 
                         // Фильтруем экзамены по подходящим аудиториям
-                        if (employeeSchedule.exams != null) {
-                            employeeSchedule.exams = employeeSchedule.exams.filter { exam ->
+                        employeeSchedule.exams?.let { exams ->
+                            employeeSchedule.exams = exams.filter { exam ->
                                 exam.auditories != null && exam.auditories.any { it in auditories_full_name }
                             }
                         }
@@ -121,20 +125,35 @@ fun getEmployeeSchedules(context: Context) {
                         // Проверяем поля на пустоту и добавляем расписание преподавателя к общему списку
                         if (filteredSchedules.any { it.value.isNotEmpty() } || (employeeSchedule.exams != null && employeeSchedule.exams.isNotEmpty())) {
 
+                            //Log.d("MainActivity", "Расписание и/или экзамены не пустые")
+
                             employeeSchedule.schedules = filteredSchedules
                             val filteredEmplSchedules = employeeSchedule.schedules.filterKeys { it.isNotEmpty() && employeeSchedule.schedules[it]!!.isNotEmpty() }
                             employeeSchedule.schedules = filteredEmplSchedules
                             allEmployeeSchedules.add(employeeSchedule)
+                        }else {
+                            //Log.d("MainActivity", "Все расписания и экзамены пустые")
                         }
 
                     } else {
-                        Log.e("MainActivity", "Получено пустое расписание для urlId: $urlId")
+                        //Log.e("MainActivity", "Получено пустое расписание для urlId: $urlId")
                     }
 
-                    if (employees_urlId.last() == urlId) {
+                    if (employees_urlId.last() == urlId && allEmployeeSchedules.isNotEmpty()) {
 
                         val json = gson.toJson(allEmployeeSchedules)
                         val file = File(context.getExternalFilesDir(null), "employeeSchedule.json")
+
+                        // Проверка, создан ли файл перед записью
+                        if (!file.exists()) {
+                            try {
+                                file.createNewFile()
+                            } catch (e: IOException) {
+                                Log.e("Write to json", "Ошибка при создании файла (расписание преподавателей): $e")
+                                return
+                            }
+                        }
+
                         try {
                             file.writeText(json)
                             Log.d("MainActivity", "Данные успешно записаны в файл employeeSchedule.json")
@@ -144,12 +163,12 @@ fun getEmployeeSchedules(context: Context) {
 
                     }
                 } else {
-                    Log.e("MainActivity", "Ошибка при выполнении запроса: ${response.code()}")
+                    Log.e("MainActivity", "Ошибка при выполнении запроса (расписание преподавателей): ${response.code()}")
                 }
             }
 
             override fun onFailure(call: Call<EmployeeSchedule>, t: Throwable) {
-                Log.e("MainActivity", "Ошибка при выполнении запроса: ${t.message}")
+                Log.e("MainActivity", "Ошибка при выполнении запроса (расписание преподавателей): ${t.message}")
             }
         })
     }

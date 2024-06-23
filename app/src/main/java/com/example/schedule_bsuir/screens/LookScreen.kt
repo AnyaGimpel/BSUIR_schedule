@@ -1,5 +1,6 @@
 package com.example.schedule_bsuir.screens
 
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -36,13 +37,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.schedule_bsuir.json.Employee
 import com.example.schedule_bsuir.json.EmployeeSchedule
 import com.example.schedule_bsuir.json.filterEmployeeSchedule
 import com.example.schedule_bsuir.json.getWeekNumber
 import com.example.schedule_bsuir.json.readEmployeeSchedule
+import com.google.gson.Gson
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import java.io.File
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -160,10 +164,11 @@ fun LookScreen(){
 
                     filteredSchedules = filterEmployeeSchedule(employeeSchedules, audNumb, weekNumb, selectedDayOfWeek)
 
+                    /*
                     filteredSchedules.forEach { schedule ->
                         Log.d("Filtered Schedule", schedule.toString())
                     }
-
+                    */
                 } else {
                     Log.d("WeekNumber", "Номер недели для $formattedDate1 не найден.")
                 }
@@ -179,7 +184,7 @@ fun LookScreen(){
                 .padding(20.dp)
                 .fillMaxWidth(),
         ) {
-            DisplayFilteredSchedules(filteredSchedules = filteredSchedules)
+            DisplayFilteredSchedules(filteredSchedules = filteredSchedules, context = context)
         }
     }
 
@@ -240,7 +245,7 @@ fun ExposedDropdownMenuBox2(
 }
 
 @Composable
-fun DisplayFilteredSchedules(filteredSchedules: List<EmployeeSchedule>) {
+fun DisplayFilteredSchedules(filteredSchedules: List<EmployeeSchedule>,context: Context) {
     LazyColumn {
         items(filteredSchedules) { schedule ->
             Card(Modifier.padding(8.dp)) {
@@ -276,9 +281,30 @@ fun DisplayFilteredSchedules(filteredSchedules: List<EmployeeSchedule>) {
                                         color = Color.Gray,
                                         fontSize = 14.sp
                                     )
+                                    val fio = getEmployeesFio(context, schedule.employeeDto.urlId )
+                                    Text("$fio")
+                                }
+
+                                Row(
+                                    horizontalArrangement = Arrangement.End,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
                                     val groupNames = scheduleItem.studentGroups.joinToString { it.name }
                                     Text("$groupNames")
-                                    Text("${schedule.employeeDto.urlId}")
+                                }
+
+                                scheduleItem.note?.let { note ->
+                                    Row(
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier.fillMaxWidth().padding(10.dp)
+                                    ) {
+                                        Text(
+                                            text = note,
+                                            color = Color.Gray,
+                                            fontSize = 12.sp
+                                        )
+
+                                    }
                                 }
                             }
                         }
@@ -286,6 +312,19 @@ fun DisplayFilteredSchedules(filteredSchedules: List<EmployeeSchedule>) {
                 }
             }
         }
+    }
+}
+
+fun getEmployeesFio(context: Context, urlId: String ): String?  {
+    val gson = Gson()
+    val file = File(context.getExternalFilesDir(null), "employees.json")
+    val jsonString = file.readText()
+    val employees: List<Employee> = gson.fromJson(jsonString, Array<Employee>::class.java).toList()
+
+
+    val employee = employees.find { it.urlId == urlId }
+    return employee?.let {
+        "${it.lastName} ${it.firstName.first()}. ${it.middleName.first()}."
     }
 }
 

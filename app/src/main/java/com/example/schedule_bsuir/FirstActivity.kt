@@ -7,24 +7,22 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import com.example.schedule_bsuir.json.getAuditories
-import com.example.schedule_bsuir.json.getDepartments
 import com.example.schedule_bsuir.json.getEmployeeSchedules
 import com.example.schedule_bsuir.json.getEmployees
-import com.example.schedule_bsuir.json.readAuditories
 import com.example.schedule_bsuir.ui.theme.Schedule_bsuirTheme
+import kotlinx.coroutines.*
 
 class FirstActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             Schedule_bsuirTheme {
-                //getEmployees(this)
-                //getEmployeeSchedules(this)
-                //readAuditories(this)
                 MainScreen()
+
             }
         }
     }
@@ -44,6 +42,17 @@ fun NavigateButton() {
 
 @Composable
 fun MainScreen() {
-    NavigateButton()
+    val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        // Получаем список аудиторий
+        getAuditories(context)
+        // Получаем список сотрудников
+        getEmployees(context)
+        delay(1000)
+        // Получаем расписания для сотрудников
+        getEmployeeSchedules(context)
+    }
+
+    NavigateButton()
 }

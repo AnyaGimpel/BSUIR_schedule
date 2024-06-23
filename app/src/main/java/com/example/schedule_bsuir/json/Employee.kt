@@ -11,6 +11,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import java.io.File
+import java.io.IOException
 
 interface MyAPI {
     @GET("/api/v1/employees/all")
@@ -42,6 +43,7 @@ fun getEmployees(context: Context) {
     api.getEmployees().enqueue(object : Callback<Array<Employee>> {
         override fun onResponse(call: Call<Array<Employee>>, response: Response<Array<Employee>>) {
             if (response.isSuccessful) {
+                Log.e("API connection", "Успешное подключение API (список преподавателей)")
                 val employees = response.body()
 
                 val gson = GsonBuilder()
@@ -50,6 +52,17 @@ fun getEmployees(context: Context) {
 
                 val json = gson.toJson(employees)
                 val file = File(context.getExternalFilesDir(null), "employees.json")
+
+                // Проверка, создан ли файл перед записью
+                if (!file.exists()) {
+                    try {
+                        file.createNewFile()
+                    } catch (e: IOException) {
+                        Log.e("Write to json", "Ошибка при создании файла (список преподавателей): $e")
+                        return
+                    }
+                }
+
                 try {
                     file.writeText(json)
                     Log.d("MainActivity", "Данные успешно записаны в файл employees.json")
@@ -57,13 +70,13 @@ fun getEmployees(context: Context) {
                     Log.e("MainActivity", "Ошибка при записи данных в файл: $e")
                 }
             } else {
-                Log.e("API connection", "Ошибка подключения API")
+                Log.e("API connection", "Ошибка подключения API (список преподавателей)")
             }
 
         }
 
         override fun onFailure(call: Call<Array<Employee>>, t: Throwable) {
-            Log.e("API connection", "Ошибка подключения API")
+            Log.e("API connection", "Ошибка подключения API (список преподавателей)")
         }
     })
 }
