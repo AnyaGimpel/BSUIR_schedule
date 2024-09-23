@@ -98,6 +98,7 @@ fun getEmployeeSchedules(context: Context) {
 
     // Итерируемся по каждому urlId и отправляем запросы
     for (urlId in employees_urlId) {
+
         api.getEmployeeSchedule(urlId).enqueue(object : Callback<EmployeeSchedule> {
             override fun onResponse(call: Call<EmployeeSchedule>, response: Response<EmployeeSchedule>) {
                 if (response.isSuccessful) {
@@ -201,26 +202,7 @@ fun readEmployeeSchedule(context: Context): List<EmployeeSchedule> {
     val gson = Gson()
     return gson.fromJson(jsonString, Array<EmployeeSchedule>::class.java).toList()
 }
-/*
-fun filterEmployeeSchedule(employeeSchedules: List<EmployeeSchedule>,audNumb: String, weekNumb: Int, selectedDayOfWeek: String): List<EmployeeSchedule> {
-    val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
-        val filteredSchedules = employeeSchedule.schedules[selectedDayOfWeek]?.filter { schedule ->
-            schedule.auditories.contains(audNumb) && schedule.weekNumber.contains(weekNumb)
-        } ?: emptyList()
 
-        if (filteredSchedules.isNotEmpty()) {
-            listOf(
-                employeeSchedule.copy(schedules = mapOf("selectedDayOfWeek" to filteredSchedules))
-            )
-        } else {
-            emptyList()
-        }
-    }
-    return filteredSchedules.toList()
-}
-
-
- */
 fun filterEmployeeSchedule(employeeSchedules: List<EmployeeSchedule>, audNumb: String, weekNumb: Int, selectedDayOfWeek: String): List<EmployeeSchedule> {
     val filteredSchedules = employeeSchedules.flatMap { employeeSchedule ->
         employeeSchedule.schedules[selectedDayOfWeek]?.filter { schedule ->

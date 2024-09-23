@@ -10,9 +10,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.compose.rememberNavController
-import com.example.schedule_bsuir.navigation.BottomNavigationBar
-import com.example.schedule_bsuir.navigation.NavHostContainer
 import com.example.schedule_bsuir.screens.LookScreen
 import com.example.schedule_bsuir.ui.theme.Schedule_bsuirTheme
 
